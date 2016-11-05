@@ -1,0 +1,26 @@
+[package]
+name = "netinfo"
+version = "0.1.0"
+authors = ["Chang Spivey <chang.spivey@gmail.com>"]
+description = "Groups network usage by process"
+repository = "https://github.com/ChangSpivey/netinfo"
+documentation = "https://docs.rs/netinfo"
+readme = "README.md"
+keywords = ["network", "profile", "usage", "nethogs", "pid"]
+license = "AGPL-3.0"
+
+[lib]
+name = "netinfo"
+path = "src/lib.rs"
+
+[[bin]]
+name = "netinfo"
+path = "src/main.rs"
+doc = false
+
+[dependencies]
+pnet = "0.14.0"
+enum_primitive = "0.1.0"
+byteorder = "0.5"
+error-chain = "0.6.1"
+log = "0.3.6"
