@@ -9,6 +9,8 @@ Because it heavily uses the `/proc`-filesystem, only Linux is supported at the m
 
 [Documentation](https://docs.rs/netinfo)
 
+[Crates.io](https://crates.io/crates/netinfo)
+
 How to use the library
 ----------
 
@@ -16,9 +18,17 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-netinfo=0.1
+netinfo = 0.1
 ```
 
+How to compile the binary
+----------
+
+Install Rust and Cargo, then call:
+
+```bash
+$ cargo install netinfo
+```
 
 Running binaries
 ----------
