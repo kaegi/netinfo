@@ -27,9 +27,9 @@ fn main() {
     let net_interface = Netinfo::list_net_interfaces().pop().unwrap();
 
     println!("Please use applications that send data over network interface '{}' to see statistics.", net_interface.name);
-    println!();
+    println!("");
     println!("{}", SEPARATOR);
-    println!();
+    println!("");
 
     let mut netinfo = Netinfo::new(net_interface).unwrap();
     netinfo.set_autorefresh_interval(Some(Duration::from_millis(100)));
@@ -52,13 +52,13 @@ fn main() {
             let num_tcp_bytes = statistics.get_bytes_by_transport_type(TransportType::Tcp);
             let num_udp_bytes = statistics.get_bytes_by_transport_type(TransportType::Udp);
 
-            println!();
+            println!("");
             println!("Tcp/Udp: {}kB / {}kB", num_tcp_bytes / 1000, num_udp_bytes / 1000);
             println!("Unknown: {}kB", num_unknown / 1000);
             println!("Total: {}kB", num_total_bytes / 1000);
-            println!();
+            println!("");
             println!("{}", SEPARATOR);
-            println!();
+            println!("");
         }
         netinfo.clear();
         sleep(Duration::new(1, 0));
