@@ -27,6 +27,7 @@ How to compile the binary
 Install Rust and Cargo, then call:
 
 ```bash
+# This will create the binary `~/.cargo/bin/netinfo`
 $ cargo install netinfo
 ```
 
