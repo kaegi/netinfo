@@ -31,7 +31,7 @@ fn main() {
     println!("{}", SEPARATOR);
     println!("");
 
-    let mut netinfo = Netinfo::new(net_interface).unwrap();
+    let mut netinfo = Netinfo::new(&[net_interface]).unwrap();
     netinfo.start_async();
 
 

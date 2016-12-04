@@ -123,8 +123,10 @@ impl Netinfo {
         CaptureHandle::list_net_interfaces()
     }
 
-    /// Constructor for Netinfo.
-    pub fn new(interface: NetworkInterface) -> Result<Netinfo> {
+    /// Constructor for Netinfo. WARNING: this function will only handle the first NetworkInterface -
+    /// tracking multiple interfaces at the same time will be implemented in the future. Until then
+    /// this signature is there for API stability.
+    pub fn new(interface: &[NetworkInterface]) -> Result<Netinfo> {
         // These variables are shared between the Netinfo object and the closure in CaptureHandle.
         let packet_matcher = Arc::new(Mutex::new(PacketMatcher::new()));
         let statistics = Arc::new(Mutex::new(NetStatistics::default()));
@@ -142,7 +144,7 @@ impl Netinfo {
 
         Ok(Netinfo {
             capture_handle:
-                Arc::new(Mutex::new(CaptureHandle::new(interface,
+                Arc::new(Mutex::new(CaptureHandle::new(&interface[0],
                                                        packet_handler_closure)?)),
             statistics: statistics,
             thread_handle_opt: None,

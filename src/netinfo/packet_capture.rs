@@ -208,12 +208,12 @@ impl CaptureHandle {
 
     /// Create a new `CaptureHandle` for a specific network interface. The interface can be obtained from `list_net_interfaces()`. The second
     /// argument is a closure where all packet infos are dealt with.
-    pub fn new<F: FnMut(PacketInfo) -> Result<()> + Send + 'static>(interface: NetworkInterface, packet_info_handler: F) -> Result<CaptureHandle> {
+    pub fn new<F: FnMut(PacketInfo) -> Result<()> + Send + 'static>(interface: &NetworkInterface, packet_info_handler: F) -> Result<CaptureHandle> {
         info!("CaptureHandle for interface: {:?}", interface);
 
         Ok(CaptureHandle {
-            channel: datalink::channel(&interface, Config::default()).chain_err(|| ErrorKind::ChannelCreationError)?,
-            capture_parser: CaptureParser::new(Box::new(packet_info_handler), interface.ips),
+            channel: datalink::channel(interface, Config::default()).chain_err(|| ErrorKind::ChannelCreationError)?,
+            capture_parser: CaptureParser::new(Box::new(packet_info_handler), interface.ips.clone()),
         })
     }
 }
