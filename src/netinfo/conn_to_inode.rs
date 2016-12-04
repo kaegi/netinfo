@@ -85,9 +85,7 @@ impl ConnToInodeMap {
             let local_addr = Self::parse_ip_addr(local_addr_str)?;
             let remote_addr = Self::parse_ip_addr(remote_addr_str)?;
 
-            let inode_res: Result<_> = Inode::from_str(words[9])
-                                                .chain_err(|| ErrorKind::ProcNetFileHasWrongFormat);
-            let inode = inode_res?;
+            let inode = Inode::from_str(words[9]).chain_err(|| ErrorKind::ProcNetFileHasWrongFormat)?;
 
             hash_map.insert(Connection::new(local_addr, remote_addr), inode);
         }

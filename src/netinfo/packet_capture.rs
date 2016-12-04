@@ -94,8 +94,7 @@ impl CaptureParser {
 			&mut Channel::Ethernet(_ /* ref tx */, ref mut rx) => {
                 let mut iter = rx.iter();
                 loop {
-                    let packet_res: Result<_>  = iter.next().chain_err(|| ErrorKind::EthernetReceiveError);
-                    let packet = packet_res?;
+                    let packet = iter.next().chain_err(|| ErrorKind::EthernetReceiveError)?;
                     let extra_data = ExtraPacketData { length: packet.packet().len() as u64 };
                     self.handle_ethernet_packet(extra_data, packet)?;
 				}
@@ -211,10 +210,9 @@ impl CaptureHandle {
     /// argument is a closure where all packet infos are dealt with.
     pub fn new<F: FnMut(PacketInfo) -> Result<()> + Send + 'static>(interface: NetworkInterface, packet_info_handler: F) -> Result<CaptureHandle> {
         info!("CaptureHandle for interface: {:?}", interface);
-        let channel_res: Result<Channel> = datalink::channel(&interface, Config::default()).chain_err(|| ErrorKind::ChannelCreationError);
 
         Ok(CaptureHandle {
-            channel: channel_res?,
+            channel: datalink::channel(&interface, Config::default()).chain_err(|| ErrorKind::ChannelCreationError)?,
             capture_parser: CaptureParser::new(Box::new(packet_info_handler), interface.ips),
         })
     }
