@@ -3,9 +3,8 @@ use netinfo::{Pid, PacketInfo, CaptureHandle, PacketMatcher, ConnectionType, Tra
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
-use std::time::Duration;
 use std::thread;
-use std::thread::{sleep, JoinHandle};
+use std::thread::{JoinHandle};
 use netinfo::error::*;
 
 #[derive(Clone, Debug, Default)]
@@ -107,36 +106,15 @@ impl NetStatistics {
     }
 }
 
-/// Current state of a thread (used for signaling between two threads).
-#[derive(Clone, Debug, Copy, Eq, PartialEq)]
-enum ThreadState {
-    /// Thread was not started.
-    Inactive,
-
-    /// Thread got signal to stop (but might be still running).
-    Stopping,
-
-    /// Thread is running.
-    Running,
-
-    // / Thread failed.
-    //Dead
-}
-
 /// This structure allows you to group network traffic by pid.
 #[allow(missing_debug_implementations)] // TODO
 pub struct Netinfo {
     capture_handle: Arc<Mutex<CaptureHandle>>,
 
-    packet_matcher: Arc<Mutex<PacketMatcher>>,
-
     /// This will be updated by the closure which is given to PacketCapture.
     statistics: Arc<Mutex<NetStatistics>>,
 
     thread_handle_opt: Option<JoinHandle<()>>,
-    refresh_thread_opt: Option<JoinHandle<()>>,
-
-    refresh_thread_state: Arc<Mutex<ThreadState>>,
 }
 
 impl Netinfo {
@@ -167,11 +145,8 @@ impl Netinfo {
             capture_handle:
                 Arc::new(Mutex::new(CaptureHandle::new(interface,
                                                        packet_handler_closure)?)),
-            packet_matcher: packet_matcher,
             statistics: statistics,
             thread_handle_opt: None,
-            refresh_thread_opt: None,
-            refresh_thread_state: Arc::new(Mutex::new(ThreadState::Inactive)),
         })
     }
 
@@ -193,43 +168,6 @@ impl Netinfo {
     /// Resets the statistics.
     pub fn clear(&mut self) {
         *self.statistics.lock().unwrap() = NetStatistics::default();
-    }
-
-    /// Refresh internal tables. This should be done in small time intervals (about 100ms). Every connection that is
-    /// opened and closed within such an interval __can not be associated with an pid__. Calling this function too often
-    /// will increase CPU usage.
-    pub fn refresh(&mut self) -> Result<()> {
-        self.packet_matcher.lock().unwrap().refresh()
-    }
-
-    /// Interval in which "refresh()" will automatically be called. "duration" as None means stopping the thread.
-    pub fn set_autorefresh_interval(&mut self, duration: Option<Duration>) {
-        if let Some(join_handle) = self.refresh_thread_opt.take() {
-            *self.refresh_thread_state.lock().unwrap() = ThreadState::Stopping;
-            join_handle.join().unwrap();
-            *self.refresh_thread_state.lock().unwrap() = ThreadState::Inactive;
-        }
-
-        // only stop thread - do not start one
-        let duration = if let Some(duration) = duration { duration } else { return };
-
-        *self.refresh_thread_state.lock().unwrap() = ThreadState::Running;
-
-        // clone shared object to send them to the thread
-        let packet_matcher = self.packet_matcher.clone();
-        let thread_state = self.refresh_thread_state.clone();
-
-        // start thread
-        self.refresh_thread_opt = Some(thread::spawn(move || {
-            loop {
-                // stop when told to do so
-                if *thread_state.lock().unwrap() != ThreadState::Running { break }
-
-                // refresh connection-to-pid map in "duration" intervals
-                packet_matcher.lock().unwrap().refresh().unwrap();
-                sleep(duration);
-            }
-        }));
     }
 
     /// Start capture in current thread. This function will block until an error occurs (may take a LOOOONG time).

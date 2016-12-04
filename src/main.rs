@@ -32,7 +32,6 @@ fn main() {
     println!("");
 
     let mut netinfo = Netinfo::new(net_interface).unwrap();
-    netinfo.set_autorefresh_interval(Some(Duration::from_millis(100)));
     netinfo.start_async();
 
 

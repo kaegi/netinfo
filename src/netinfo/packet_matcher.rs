@@ -44,16 +44,6 @@ impl PacketMatcherTables {
         Ok(())
     }
 
-    /// Find the process by transport type and connection. The connection has to be
-    /// already reversed for incoming packets.
-    /// At the beginning the internal conn->inode->pid tables are refreshed, then the
-    /// it tries to assign the connection to a pid.
-    fn get_new_connection(&mut self, tt: TransportType, c: Connection) -> Result<Option<(Inode, Pid)>> {
-        self.refresh()?;
-
-        Ok(self.map_connection(tt, c))
-    }
-
     /// Maps connection from conn->inode->pid with internal tables.
     fn map_connection(&self, tt: TransportType, c: Connection) -> Option<(Inode, Pid)> {
         self.conn_to_inode_map
@@ -73,7 +63,7 @@ impl PacketMatcher {
     }
 
     /// This function updates the tables that are used for the matching.
-    pub fn refresh(&mut self) -> Result<()> {
+    fn refresh(&mut self) -> Result<()> {
         self.tables.refresh()?;
         self.update_known_connections()?;
         Ok(())
@@ -130,7 +120,8 @@ impl PacketMatcher {
             Ok(res.map(|(_, pid)| pid))
         } else {
             // Unknown connection!
-            let inode_pid_opt = self.tables.get_new_connection(tt, c)?;
+            self.refresh()?;
+            let inode_pid_opt = self.tables.map_connection(tt, c);
             self.known_connections.insert((tt, c), inode_pid_opt);
             Ok(inode_pid_opt.map(|(_, pid)| pid))
         }
