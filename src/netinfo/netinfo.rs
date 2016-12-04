@@ -135,9 +135,8 @@ impl Netinfo {
 
             // The closure which redirects packet to Self::handle_packet().
             // This closure will be called every time a packet is captured by CaptureHandle.
-            move |packet_info: PacketInfo| {
-                /// TODO: let error bubble up in CaptureHandle
-                Self::handle_packet(&mut packet_matcher, &mut statistics, packet_info).unwrap()
+            move |packet_info: PacketInfo| -> Result<()> {
+                Self::handle_packet(&mut packet_matcher, &mut statistics, packet_info)
             }
         };
 

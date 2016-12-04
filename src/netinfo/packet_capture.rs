@@ -66,7 +66,7 @@ struct ExtraPacketData {
 
 struct CaptureParser {
     /// Function that handles packet infos
-    packet_info_handler: Box<FnMut(PacketInfo) + Send>,
+    packet_info_handler: Box<FnMut(PacketInfo) -> Result<()> + Send>,
 
     /// Local IP addresses accociated with network interface. Organized in a
     /// HashSet so we can determine quickly, whether IpAddr is local IpAddr.
@@ -82,7 +82,7 @@ impl std::fmt::Debug for CaptureParser {
 }
 
 impl CaptureParser {
-    fn new(packet_info_handler: Box<FnMut(PacketInfo) + Send>, local_net_ips_opt: Option<Vec<IpAddr>>) -> CaptureParser {
+    fn new(packet_info_handler: Box<FnMut(PacketInfo) -> Result<()> + Send>, local_net_ips_opt: Option<Vec<IpAddr>>) -> CaptureParser {
         let mut local_net_ips_hashset = HashSet::new();
         if let Some(local_net_ips) = local_net_ips_opt {
             for ip in local_net_ips { local_net_ips_hashset.insert(ip); }
@@ -157,7 +157,7 @@ impl CaptureParser {
     }
 
     fn handle_packet_info(&mut self, packet_info: PacketInfo) -> Result<()> {
-        (self.packet_info_handler)(packet_info);
+        (self.packet_info_handler)(packet_info)?;
         Ok(())
     }
 
@@ -210,7 +210,7 @@ impl CaptureHandle {
 
     /// Create a new `CaptureHandle` for a specific network interface. The interface can be obtained from `list_net_interfaces()`. The second
     /// argument is a closure where all packet infos are dealt with.
-    pub fn new<F: FnMut(PacketInfo) + Send + 'static>(interface: NetworkInterface, packet_info_handler: F) -> Result<CaptureHandle> {
+    pub fn new<F: FnMut(PacketInfo) -> Result<()> + Send + 'static>(interface: NetworkInterface, packet_info_handler: F) -> Result<CaptureHandle> {
         info!("CaptureHandle for interface: {:?}", interface);
         let channel_res: Result<Channel> = datalink::channel(&interface, Config::default()).chain_err(|| ErrorKind::ChannelCreationError);
 
