@@ -47,7 +47,9 @@ macro_rules! handle {
     ($_self:ident, $f:ident, $from:ident, $to_ty:ident, $($extra:ident),*) => {{
         match $to_ty::new($from.payload()) {
             Some(new_packet) => { $_self.$f(new_packet, $($extra),*) }
-            None => { Err(Error::from(ErrorKind::PacketConversionError)) }
+            /* Ignore error, packet errors seem to occur from time to time */
+            /* Err(Error::from(ErrorKind::PacketConversionError)) */
+            None => { warn!("package conversion error happend - ignoring packet"); Ok(()) }
         }
     }}
 }
