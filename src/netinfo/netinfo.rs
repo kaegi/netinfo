@@ -158,7 +158,8 @@ impl Netinfo {
             // The closure which redirects packet to Self::handle_packet().
             // This closure will be called every time a packet is captured by CaptureHandle.
             move |packet_info: PacketInfo| {
-                Self::handle_packet(&mut packet_matcher, &mut statistics, packet_info);
+                /// TODO: let error bubble up in CaptureHandle
+                Self::handle_packet(&mut packet_matcher, &mut statistics, packet_info).unwrap()
             }
         };
 
@@ -176,11 +177,12 @@ impl Netinfo {
 
     fn handle_packet(packet_matcher: &mut Arc<Mutex<PacketMatcher>>,
                      statistics: &mut Arc<Mutex<NetStatistics>>,
-                     packet_info: PacketInfo) {
+                     packet_info: PacketInfo) -> Result<()> {
         let pid_opt = {
-            packet_matcher.lock().unwrap().find_pid(packet_info.clone())
+            packet_matcher.lock().unwrap().find_pid(packet_info.clone())?
         };
         statistics.lock().unwrap().add_bytes(pid_opt, packet_info.inout_type, Some(packet_info.transport_type), packet_info.datalen);
+        Ok(())
     }
 
     /// Returns the statistics about traffic since last clear.
