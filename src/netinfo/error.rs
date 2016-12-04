@@ -2,11 +2,11 @@ use std::{num, io};
 
 error_chain! {
     foreign_links {
-        num::ParseIntError, ParseIntError,
+        ParseIntError(num::ParseIntError)
         /// Parser error
         ;
 
-        io::Error, Io,
+        Io(io::Error)
         /// IO-Error from std::io
         ;
     }

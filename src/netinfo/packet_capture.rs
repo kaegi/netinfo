@@ -11,7 +11,6 @@ use pnet::packet::udp::{UdpPacket};
 use pnet::packet::{Packet};
 use netinfo::{ConnectionType, PacketInfo, TransportType};
 use netinfo::error::*;
-use error_chain::ResultExt;
 use std::os::raw::c_int;
 
 

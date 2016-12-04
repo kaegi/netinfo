@@ -8,7 +8,6 @@ use std::net::{SocketAddr, Ipv4Addr, Ipv6Addr, IpAddr};
 use std::str::FromStr;
 use byteorder::*;
 use netinfo::error::*;
-use error_chain::ResultExt;
 
 
 /// This structure uses the tables in `/proc/net/tcp`, `/proc/net/tcp6`, `/proc/net/udp` and `/proc/net/udp6` files to generate a

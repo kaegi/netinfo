@@ -4,7 +4,7 @@ version = "0.1.1"
 dependencies = [
  "byteorder 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "enum_primitive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "error-chain 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "error-chain 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pnet 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -74,7 +74,7 @@ dependencies = [
 
 [[package]]
 name = "error-chain"
-version = "0.6.1"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "backtrace 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -308,7 +308,7 @@ dependencies = [
 "checksum cfg-if 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "de1e760d7b6535af4241fca8bd8adf68e2e7edacc6b29f5d399050c5e48cf88c"
 "checksum dbghelp-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "97590ba53bcb8ac28279161ca943a924d1fd4a8fb3fa63302591647c4fc5b850"
 "checksum enum_primitive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f79eff5be92a4d7d5bddf7daa7d650717ea71628634efe6ca7bcda85b2183c23"
-"checksum error-chain 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "99a6d79bd7e32fa662a7da1f14ae7a3d451b4beb804e5746746b12d703efcae4"
+"checksum error-chain 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "1cd681735364a04cd5d69f01a4f6768e70473941f8d86d8c224faf6955a75799"
 "checksum gcc 0.3.38 (registry+https://github.com/rust-lang/crates.io-index)" = "553f11439bdefe755bf366b264820f1da70f3aaf3924e594b886beb9c831bcf5"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 "checksum libc 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)" = "044d1360593a78f5c8e5e710beccdc24ab71d1f01bc19a29bcacdba22e8475d8"
