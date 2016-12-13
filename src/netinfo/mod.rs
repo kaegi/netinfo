@@ -18,6 +18,8 @@ pub use self::conn_to_inode::ConnToInodeMap;
 pub use self::packet_capture::CaptureHandle;
 pub use self::types::Connection;
 pub use self::types::PacketInfo;
+pub use self::types::MacAddr;
+pub use self::types::NetworkInterface;
 
 /// Represents an Unix-Inode.
 pub type Inode = u64;

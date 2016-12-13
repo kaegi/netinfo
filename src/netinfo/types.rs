@@ -54,6 +54,7 @@ impl FromStr for MacAddr {
 }
 
 /// This is used to identify the network interface you want to count the traffic on.
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct NetworkInterface {
     inner: PnetNetworkInterface,
 }

@@ -27,7 +27,9 @@ pub use netinfo::Netinfo;
 pub use netinfo::NetStatistics;
 pub use netinfo::InoutType;
 pub use netinfo::TransportType;
+pub use netinfo::Pid;
+pub use netinfo::NetworkInterface;
+pub use netinfo::MacAddr;
 pub use netinfo::error;
-pub use pnet::datalink::NetworkInterface;
 
 mod netinfo;

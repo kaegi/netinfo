@@ -15,8 +15,6 @@ extern crate byteorder;
 
 mod netinfo;
 pub use netinfo::*;
-pub use pnet::datalink::NetworkInterface;
-
 
 use std::time::Duration;
 use std::thread::sleep;
