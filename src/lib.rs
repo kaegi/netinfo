@@ -25,7 +25,7 @@ extern crate byteorder;
 
 pub use netinfo::Netinfo;
 pub use netinfo::NetStatistics;
-pub use netinfo::ConnectionType;
+pub use netinfo::InoutType;
 pub use netinfo::TransportType;
 pub use netinfo::error;
 pub use pnet::datalink::NetworkInterface;

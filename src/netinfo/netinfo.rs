@@ -1,5 +1,5 @@
 use pnet::datalink::NetworkInterface;
-use netinfo::{Pid, PacketInfo, CaptureHandle, PacketMatcher, ConnectionType, TransportType};
+use netinfo::{Pid, PacketInfo, CaptureHandle, PacketMatcher, InoutType, TransportType};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
@@ -12,18 +12,18 @@ use netinfo::error::*;
 pub struct NetStatistics {
     /// Usage per "Pid | Inout | Udp/Tcp". Some values might not be known (we know a package is tcp-outgoing but can't
     /// figure out an associated process).
-    map: HashMap<(Option<Pid>, Option<ConnectionType>, Option<TransportType>), u64>,
+    map: HashMap<(Option<Pid>, Option<InoutType>, Option<TransportType>), u64>,
 }
 
 impl NetStatistics {
-    fn add_bytes(&mut self, pid: Option<Pid>, c: Option<ConnectionType>, tt: Option<TransportType>, b: u64) {
+    fn add_bytes(&mut self, pid: Option<Pid>, c: Option<InoutType>, tt: Option<TransportType>, b: u64) {
         *self.map.entry((pid, c, tt)).or_insert(0) += b;
     }
 
     /// None for inout type and transport type means "this value can be arbitrary". This is much faster than "get_bytes_by_attr" when map contains many pids.
-    fn get_bytes_by_pidopt_and_attr(&self, pid_opt: Option<Pid>, c: Option<ConnectionType>, tt: Option<TransportType>) -> u64 {
+    fn get_bytes_by_pidopt_and_attr(&self, pid_opt: Option<Pid>, c: Option<InoutType>, tt: Option<TransportType>) -> u64 {
         let mut b = 0;
-        for &c_attr in [None, Some(ConnectionType::Incoming), Some(ConnectionType::Outgoing)].into_iter() {
+        for &c_attr in [None, Some(InoutType::Incoming), Some(InoutType::Outgoing)].into_iter() {
             if c != None && c != c_attr { continue }
             for &tt_attr in [None, Some(TransportType::Tcp), Some(TransportType::Udp)].into_iter() {
                 if tt != None && tt != tt_attr { continue }
@@ -37,7 +37,7 @@ impl NetStatistics {
 
 
     /// None means "this value can be arbitrary".
-    fn get_bytes_by_attr(&self, pid: Option<Pid>, c: Option<ConnectionType>, tt: Option<TransportType>) -> u64 {
+    fn get_bytes_by_attr(&self, pid: Option<Pid>, c: Option<InoutType>, tt: Option<TransportType>) -> u64 {
         self.map.iter()
                 .filter(|&(&(kpid, kc, ktt), _)| (pid == None || pid == kpid) && (c == None || c == kc) && (tt == None || tt == ktt))
                 .map(|(_, &b)| b)
@@ -59,9 +59,9 @@ impl NetStatistics {
         self.get_bytes_by_attr(None, None, Some(tt))
     }
 
-    /// Get network usage per connection type (udp/tcp).
-    pub fn get_bytes_by_inout_type(&self, c: ConnectionType) -> u64 {
-        self.get_bytes_by_attr(None, Some(c), None)
+    /// Get network usage per inout type (udp/tcp).
+    pub fn get_bytes_by_inout_type(&self, i: InoutType) -> u64 {
+        self.get_bytes_by_attr(None, Some(i), None)
     }
 
     /// List all pids which have some data attached.
@@ -76,12 +76,12 @@ impl NetStatistics {
 
     /// None as pid means "traffic that could not be assinged to pid".
     /// None for inout_type or transport_type means "can be anything"
-    pub fn get_bytes_per_pidopt_iot_tt(&self, pid: Option<Pid>, inout_type: Option<ConnectionType>, transport_type: Option<TransportType>) -> u64 {
+    pub fn get_bytes_per_pidopt_iot_tt(&self, pid: Option<Pid>, inout_type: Option<InoutType>, transport_type: Option<TransportType>) -> u64 {
         self.get_bytes_by_pidopt_and_attr(pid, inout_type, transport_type)
     }
 
     /// Get traffic that has direction "inout_type" and is assigned to "pid".
-    pub fn get_bytes_per_pid_inout(&self, pid: Pid, inout_type: ConnectionType) -> u64 {
+    pub fn get_bytes_per_pid_inout(&self, pid: Pid, inout_type: InoutType) -> u64 {
         self.get_bytes_by_pidopt_and_attr(Some(pid), Some(inout_type), None)
     }
 

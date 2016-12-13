@@ -1,4 +1,4 @@
-use netinfo::{ConnToInodeMap, InodeToPidMap, Inode, Pid, Connection, ConnectionType, TransportType, PacketInfo};
+use netinfo::{ConnToInodeMap, InodeToPidMap, Inode, Pid, Connection, InoutType, TransportType, PacketInfo};
 use netinfo::error::*;
 use std::collections::HashMap;
 
@@ -100,8 +100,8 @@ impl PacketMatcher {
             // Incoming packets have a their address ordered as "remote addr -> local addr" but
             // our connection-to-inode table only contains "local addr -> remote addr" entries.
             // So we have to reverse the connection.
-            Some(ConnectionType::Incoming) => { c = c.get_reverse(); }
-            Some(ConnectionType::Outgoing) => {}
+            Some(InoutType::Incoming) => { c = c.get_reverse(); }
+            Some(InoutType::Outgoing) => {}
 
             // TODO: use heuristics to guess whether packet is incoming or outgoing - this is just a corner case though
             None => { return Ok(None); }

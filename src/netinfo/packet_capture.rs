@@ -9,7 +9,7 @@ use pnet::packet::ipv6::{Ipv6Packet};
 use pnet::packet::tcp::{TcpPacket};
 use pnet::packet::udp::{UdpPacket};
 use pnet::packet::{Packet};
-use netinfo::{ConnectionType, PacketInfo, TransportType};
+use netinfo::{InoutType, PacketInfo, TransportType};
 use netinfo::error::*;
 use std::os::raw::c_int;
 
@@ -159,13 +159,13 @@ impl CaptureParser {
         Ok(())
     }
 
-    fn get_inout_type(&self, source_addr: IpAddr, dest_addr: IpAddr) -> Result<Option<ConnectionType>> {
+    fn get_inout_type(&self, source_addr: IpAddr, dest_addr: IpAddr) -> Result<Option<InoutType>> {
         match (self.local_net_ips.contains(&source_addr), self.local_net_ips.contains(&dest_addr)) {
             // local to non-local
-            (true, false) => { Ok(Some(ConnectionType::Outgoing)) }
+            (true, false) => { Ok(Some(InoutType::Outgoing)) }
 
             // non-local to local
-            (false, true) => { Ok(Some(ConnectionType::Incoming)) }
+            (false, true) => { Ok(Some(InoutType::Incoming)) }
 
             // it can happen that neither address is local.
             // Example: Incoming multicast can go from "remote -> 239.255.255.250".

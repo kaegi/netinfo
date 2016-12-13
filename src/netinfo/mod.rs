@@ -10,7 +10,7 @@ pub mod error;
 
 pub use self::netinfo::Netinfo;
 pub use self::netinfo::NetStatistics;
-pub use self::types::ConnectionType;
+pub use self::types::InoutType;
 pub use self::types::TransportType;
 pub use self::packet_matcher::PacketMatcher;
 pub use self::inode_to_pid::InodeToPidMap;

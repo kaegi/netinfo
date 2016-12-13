@@ -32,13 +32,13 @@ pub struct PacketInfo {
     /// Transport layer type
     pub transport_type: TransportType,
 
-    /// Is Some(Incoming) or Some(Outgoing) if connection type can be determined, None if not
-    pub inout_type: Option<ConnectionType>
+    /// Is Some(Incoming) or Some(Outgoing) if inout type can be determined, None if not
+    pub inout_type: Option<InoutType>
 }
 
 impl PacketInfo {
     /// Constructor for `PacketInfo` type.
-    pub fn new(sip: SocketAddr, dip: SocketAddr, datalen: u64, transport_type: TransportType, inout_type: Option<ConnectionType>) -> PacketInfo {
+    pub fn new(sip: SocketAddr, dip: SocketAddr, datalen: u64, transport_type: TransportType, inout_type: Option<InoutType>) -> PacketInfo {
         PacketInfo { sip: sip, dip: dip, time: 0, datalen: datalen, transport_type: transport_type, inout_type: inout_type }
     }
 }
@@ -120,8 +120,8 @@ impl From<PacketInfo> for Connection {
 
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-/// ConnectionType can be Incoming or Outgoing (do we have to reverse Connection or not?).
-pub enum ConnectionType {
+/// InoutType can be Incoming or Outgoing (direction of the traffic).
+pub enum InoutType {
     /// Local address -> Remote adress
     Incoming,
 

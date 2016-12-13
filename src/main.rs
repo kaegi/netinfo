@@ -39,8 +39,8 @@ fn main() {
         let statistics = netinfo.get_net_statistics();
         let mut printed_pid = false;
         for pid in statistics.get_all_pids() {
-            let num_incoming_bytes = statistics.get_bytes_per_pid_inout(pid, ConnectionType::Incoming);
-            let num_outgoing_bytes = statistics.get_bytes_per_pid_inout(pid, ConnectionType::Outgoing);
+            let num_incoming_bytes = statistics.get_bytes_per_pid_inout(pid, InoutType::Incoming);
+            let num_outgoing_bytes = statistics.get_bytes_per_pid_inout(pid, InoutType::Outgoing);
             println!("Pid: {}  i: {}kB   o: {}kB", pid, num_incoming_bytes / 1000, num_outgoing_bytes / 1000);
             printed_pid = true;
         }
