@@ -1,5 +1,5 @@
-use pnet::datalink::NetworkInterface;
-use netinfo::{Pid, PacketInfo, CaptureHandle, PacketMatcher, InoutType, TransportType};
+use netinfo::{Pid, PacketInfo, CaptureHandle, PacketMatcher, InoutType, TransportType, NetworkInterface};
+use pnet::datalink::NetworkInterface as PnetNetworkInterface;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::collections::HashMap;
@@ -120,13 +120,13 @@ pub struct Netinfo {
 impl Netinfo {
     /// Lists all non-loopback, active (= up and runnig) network interfaces
     pub fn list_net_interfaces() -> Vec<NetworkInterface> {
-        CaptureHandle::list_net_interfaces()
+        CaptureHandle::list_net_interfaces().into_iter().map(|i| NetworkInterface::from(i)).collect()
     }
 
     /// Constructor for Netinfo. WARNING: this function will only handle the first NetworkInterface -
     /// tracking multiple interfaces at the same time will be implemented in the future. Until then
     /// this signature is there for API stability.
-    pub fn new(interface: &[NetworkInterface]) -> Result<Netinfo> {
+    pub fn new(interfaces: &[NetworkInterface]) -> Result<Netinfo> {
         // These variables are shared between the Netinfo object and the closure in CaptureHandle.
         let packet_matcher = Arc::new(Mutex::new(PacketMatcher::new()));
         let statistics = Arc::new(Mutex::new(NetStatistics::default()));
@@ -142,9 +142,12 @@ impl Netinfo {
             }
         };
 
+        // convert from newtype to original type that libpnet can use
+        let pnet_interfaces: Vec<PnetNetworkInterface> = interfaces.iter().map(|i| PnetNetworkInterface::from(i.clone())).collect();
+
         Ok(Netinfo {
             capture_handle:
-                Arc::new(Mutex::new(CaptureHandle::new(&interface[0],
+                Arc::new(Mutex::new(CaptureHandle::new(&pnet_interfaces[0],
                                                        packet_handler_closure)?)),
             statistics: statistics,
             thread_handle_opt: None,

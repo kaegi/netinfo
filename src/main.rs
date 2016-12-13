@@ -24,7 +24,7 @@ static SEPARATOR: &'static str = "#####################";
 fn main() {
     let net_interface = Netinfo::list_net_interfaces().pop().unwrap();
 
-    println!("Please use applications that send data over network interface '{}' to see statistics.", net_interface.name);
+    println!("Please use applications that send data over network interface '{}' to see statistics.", net_interface.get_name_as_str());
     println!("");
     println!("{}", SEPARATOR);
     println!("");
