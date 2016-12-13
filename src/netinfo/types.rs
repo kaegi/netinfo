@@ -3,6 +3,7 @@ use std::fmt;
 use std::str::FromStr;
 use std::net::{SocketAddr, Ipv4Addr, Ipv6Addr, IpAddr};
 use pnet::util::MacAddr as PnetMacAddr;
+use pnet::datalink::NetworkInterface as PnetNetworkInterface;
 use pnet::packet::PrimitiveValues;
 use netinfo::error::*;
 
@@ -50,6 +51,43 @@ impl FromStr for MacAddr {
             Err(_) => Err(ErrorKind::MacAddrParseError.into()), // TODO: chain_err() would be much nicer
         }
     }
+}
+
+/// This is used to identify the network interface you want to count the traffic on.
+pub struct NetworkInterface {
+    inner: PnetNetworkInterface,
+}
+impl From<PnetNetworkInterface> for NetworkInterface {
+  fn from(f: PnetNetworkInterface) -> NetworkInterface {
+      NetworkInterface { inner: f }
+  }
+}
+impl From<NetworkInterface> for PnetNetworkInterface {
+  fn from(f: NetworkInterface) -> PnetNetworkInterface {
+      f.inner
+  }
+}
+impl NetworkInterface {
+    /// Returns name of network interface (like "enp2s0" or "wlp3s0").
+    pub fn get_name(&self) -> String { self.inner.name.clone() }
+
+    /// Returns name of network interface (like "enp2s0" or "wlp3s0").
+    pub fn get_name_as_str(&self) -> &str { &self.inner.name }
+
+    /// The interface index (operating system specific)
+    pub fn get_index(&self) -> u32 { self.inner.index }
+
+    /// A MAC address for the interface
+    pub fn get_mac(&self) -> Option<MacAddr> { self.inner.mac.map(|m| m.into()) }
+
+    /// An IP addresses for the interface
+    pub fn get_ips(&self) -> Option<Vec<IpAddr>> { self.inner.ips.clone() }
+
+    /// An IP addresses for the interface
+    pub fn get_ips_as_slice(&self) -> Option<&[IpAddr]> { self.inner.ips.as_ref().map(|ips| &ips[..]) }
+
+    /// Operating system specific flags for the interface
+    pub fn get_flags(&self) -> u32 { self.inner.flags }
 }
 
 /// Describes a network packet.
