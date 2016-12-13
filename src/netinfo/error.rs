@@ -49,5 +49,10 @@ error_chain! {
         ProcNetFileHasWrongFormat {
             description("an /proc/net/tcp{6} or /proc/net/udp{6} exists but does not have correct formatting")
         }
+
+        /// Parsing a MAC adress failed
+        MacAddrParseError {
+            description("failed to parse MAC address")
+        }
     }
 }

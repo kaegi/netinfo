@@ -1,4 +1,10 @@
+use std::result;
+use std::fmt;
+use std::str::FromStr;
 use std::net::{SocketAddr, Ipv4Addr, Ipv6Addr, IpAddr};
+use pnet::util::MacAddr as PnetMacAddr;
+use pnet::packet::PrimitiveValues;
+use netinfo::error::*;
 
 /// Udp, Tcp or other packet type on transport layer?
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -10,6 +16,40 @@ pub enum TransportType {
     Udp,
 
     // others might get added
+}
+
+/// A MAC address (6-bytes)
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+pub struct MacAddr(pub u8, pub u8, pub u8, pub u8, pub u8, pub u8);
+impl From<(u8, u8, u8, u8, u8, u8)> for MacAddr {
+    fn from(d: (u8, u8, u8, u8, u8, u8)) -> MacAddr { MacAddr(d.0, d.1, d.2, d.3, d.4, d.5) }
+}
+impl From<[u8; 6]> for MacAddr {
+    fn from(d: [u8; 6]) -> MacAddr { MacAddr(d[0], d[1], d[2], d[3], d[4], d[5]) }
+}
+impl From<PnetMacAddr> for MacAddr {
+    fn from(d: PnetMacAddr) -> MacAddr { d.to_primitive_values().into() }
+}
+impl From<MacAddr> for PnetMacAddr {
+    fn from(d: MacAddr) -> PnetMacAddr { let MacAddr(a, b, c, d, e, f) = d; PnetMacAddr::new(a, b, c, d, e, f) }
+}
+impl From<MacAddr> for (u8, u8, u8, u8, u8, u8) {
+    fn from(d: MacAddr) -> (u8, u8, u8, u8, u8, u8) { let MacAddr(a, b, c, d, e, f) = d; (a, b, c, d, e, f) }
+}
+impl From<MacAddr> for [u8; 6] {
+  fn from(f: MacAddr) -> [u8; 6] { [f.0, f.1, f.2, f.3, f.4, f.5] }
+}
+impl fmt::Display for MacAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { PnetMacAddr::from(*self).fmt(f) }
+}
+impl FromStr for MacAddr {
+    type Err = Error;
+    fn from_str(s: &str) -> result::Result<MacAddr, Error> {
+        match PnetMacAddr::from_str(s) {
+            Ok(pnet_mac) => Ok(MacAddr::from(pnet_mac)),
+            Err(_) => Err(ErrorKind::MacAddrParseError.into()), // TODO: chain_err() would be much nicer
+        }
+    }
 }
 
 /// Describes a network packet.
