@@ -100,6 +100,9 @@ pub struct Netinfo {
     /// will be set by `start*()` and `stop()`
     stop_request: Arc<Mutex<StopRequest>>,
 
+    /// will be set by `start_async()` and `stop()`
+    thread_error: Arc<Mutex<Option<Error>>>,
+
     thread_handle_opt: Option<JoinHandle<()>>,
 }
 
@@ -139,6 +142,7 @@ impl Netinfo {
                 Arc::new(Mutex::new(CaptureHandle::new(&pnet_interfaces[0],
                                                        packet_handler_closure)?)),
             stop_request: stop_request,
+            thread_error: Arc::new(Mutex::new(None)),
             statistics: statistics,
             thread_handle_opt: None,
         })
@@ -165,7 +169,8 @@ impl Netinfo {
         Ok(())
     }
 
-    /// Start capture in current thread. This function will block until an error occurs (may take a LOOOONG time).
+    /// Start capture in current thread. This function will block until an error occurs (may take a LOOOONG time). The error is then output with the
+    /// return.
     pub fn start(&mut self) -> Result<()> {
         *self.stop_request.lock().unwrap() = StopRequest::Continue;
         self.capture_handle.lock().unwrap().handle_packets()
@@ -179,13 +184,32 @@ impl Netinfo {
         Ok(())
     }
 
+    /// Return the possible errors of the worker thread started by `start_async()`. Since there is no notification when errors occur (e.g. `get_net_statistics()` still resturns `Ok(())`), please check on this
+    /// value regularly and before restarting a a new worker thread (check for `Ok(Some(some_error))`). A returned error means that the worker thread stopped.
+    ///
+    /// By calling this function, the error is cleared (so a subsequent call will return `None` if no other error occured in a new thread).
+    ///
+    /// The `Result` is there for general error handling, the enclosed `Option<Error>` is the actual return value.
+    pub fn pop_thread_error(&mut self) -> Result<Option<Error>> {
+        Ok(self.thread_error.lock().unwrap().take())
+    }
+
     /// Start capture in different thread. This function will not block.
+    ///
+    /// Note: Starting a new thread while the old thread prior a `stop()` or `pop_thread_error()` with `Some(error)` results in
+    /// undefined behavior.
     pub fn start_async(&mut self) -> Result<()> {
         *self.stop_request.lock().unwrap() = StopRequest::Continue;
 
         let capture_handle = self.capture_handle.clone();
+        let thread_error = self.thread_error.clone();
         self.thread_handle_opt = Some(thread::spawn(move || {
-            capture_handle.lock().unwrap().handle_packets().unwrap();
+            let result: Result<()> = capture_handle.lock().unwrap().handle_packets();
+
+            // write errors but do not replace an `error` with `no error`
+            if let Err(e) = result {
+                *thread_error.lock().unwrap() = Some(e);
+            }
         }));
 
         Ok(())
