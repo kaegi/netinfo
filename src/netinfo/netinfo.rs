@@ -20,24 +20,8 @@ impl NetStatistics {
         *self.map.entry((pid, c, tt)).or_insert(0) += b;
     }
 
-    /// None for inout type and transport type means "this value can be arbitrary". This is much faster than "get_bytes_by_attr" when map contains many pids.
-    fn get_bytes_by_pidopt_and_attr(&self, pid_opt: Option<Pid>, c: Option<InoutType>, tt: Option<TransportType>) -> u64 {
-        let mut b = 0;
-        for &c_attr in [None, Some(InoutType::Incoming), Some(InoutType::Outgoing)].into_iter() {
-            if c != None && c != c_attr { continue }
-            for &tt_attr in [None, Some(TransportType::Tcp), Some(TransportType::Udp)].into_iter() {
-                if tt != None && tt != tt_attr { continue }
-
-                b += self.map.get(&(pid_opt, c_attr, tt_attr)).map(|&x| x).unwrap_or(0);
-            }
-        }
-
-        b
-    }
-
-
     /// None means "this value can be arbitrary".
-    fn get_bytes_by_attr(&self, pid: Option<Pid>, c: Option<InoutType>, tt: Option<TransportType>) -> u64 {
+    fn get_bytes_by_filter(&self, pid: Option<Pid>, c: Option<InoutType>, tt: Option<TransportType>) -> u64 {
         self.map.iter()
                 .filter(|&(&(kpid, kc, ktt), _)| (pid == None || pid == kpid) && (c == None || c == kc) && (tt == None || tt == ktt))
                 .map(|(_, &b)| b)
@@ -46,22 +30,17 @@ impl NetStatistics {
 
     /// Get network usage per pid.
     pub fn get_bytes_by_pid(&self, pid: Pid) -> u64 {
-        self.get_bytes_by_pidopt_and_attr(Some(pid), None, None)
-    }
-
-    /// Get network usage per pid or if None is used for pid_opt: all traffic that could not be assigned to pid.
-    pub fn get_bytes_by_pid_opt(&self, pid_opt: Option<Pid>) -> u64 {
-        self.get_bytes_by_pidopt_and_attr(pid_opt, None, None)
+        self.get_bytes_by_attr(Some(pid), None, None)
     }
 
     /// Get network usage per transport type (udp/tcp).
     pub fn get_bytes_by_transport_type(&self, tt: TransportType) -> u64 {
-        self.get_bytes_by_attr(None, None, Some(tt))
+        self.get_bytes_by_filter(None, None, Some(tt))
     }
 
     /// Get network usage per inout type (udp/tcp).
     pub fn get_bytes_by_inout_type(&self, i: InoutType) -> u64 {
-        self.get_bytes_by_attr(None, Some(i), None)
+        self.get_bytes_by_filter(None, Some(i), None)
     }
 
     /// List all pids which have some data attached.
@@ -76,23 +55,23 @@ impl NetStatistics {
 
     /// None as pid means "traffic that could not be assinged to pid".
     /// None for inout_type or transport_type means "can be anything"
-    pub fn get_bytes_per_pidopt_iot_tt(&self, pid: Option<Pid>, inout_type: Option<InoutType>, transport_type: Option<TransportType>) -> u64 {
-        self.get_bytes_by_pidopt_and_attr(pid, inout_type, transport_type)
+    pub fn get_bytes_by_attr(&self, pid: Option<Pid>, inout_type: Option<InoutType>, transport_type: Option<TransportType>) -> u64 {
+        let mut b = 0;
+        for &io_attr in [None, Some(InoutType::Incoming), Some(InoutType::Outgoing)].into_iter() {
+            if inout_type != None && inout_type != io_attr { continue }
+            for &tt_attr in [None, Some(TransportType::Tcp), Some(TransportType::Udp)].into_iter() {
+                if transport_type != None && transport_type != tt_attr { continue }
+
+                b += self.map.get(&(pid, io_attr, tt_attr)).map(|&x| x).unwrap_or(0);
+            }
+        }
+
+        b
     }
 
-    /// Get traffic that has direction "inout_type" and is assigned to "pid".
-    pub fn get_bytes_per_pid_inout(&self, pid: Pid, inout_type: InoutType) -> u64 {
-        self.get_bytes_by_pidopt_and_attr(Some(pid), Some(inout_type), None)
-    }
-
-    /// Get traffic that has specified transport type (udp/tcp) and is assigned to "pid".
-    pub fn get_bytes_per_pid_ttype(&self, pid: Pid, tt: TransportType) -> u64 {
-        self.get_bytes_by_pidopt_and_attr(Some(pid), None, Some(tt))
-    }
-
-    /// Total number of bytes that can't be assigned to pid.
+    /// Total number of bytes that couldn't be assigned to pid.
     pub fn get_unassigned_bytes(&self) -> u64 {
-        self.map.iter().filter(|&(&(pid_opt, _, _), _)| pid_opt.is_none()).fold(0, |acc, (_, bytes)| acc + bytes)
+        self.get_bytes_by_attr(None, None, None)
     }
 
     /// Total number of bytes that can be assigned to a pid.
@@ -101,6 +80,10 @@ impl NetStatistics {
     }
 
     /// Total number of bytes.
+    /// Some packets might dropped if they can't be handled fast enough. So this "total" value
+    /// (and every other value) might not be the real value if CPU is working to capacity.
+    ///
+    /// Please use the information from the kernel for that purpose.
     pub fn get_total(&self) -> u64 {
         self.map.values().fold(0, |acc, bytes| acc + bytes)
     }
