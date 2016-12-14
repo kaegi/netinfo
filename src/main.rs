@@ -22,7 +22,10 @@ use std::thread::sleep;
 static SEPARATOR: &'static str = "#####################";
 
 fn main() {
-    let net_interface = Netinfo::list_net_interfaces().pop().unwrap();
+    // Please use error handling instead of unwrap() in real applications - the functions heavily depend on network and thread IO, so they
+    // CAN and WILL fail at some point!
+
+    let net_interface = Netinfo::list_net_interfaces().unwrap().pop().unwrap();
 
     println!("Please use applications that send data over network interface '{}' to see statistics.", net_interface.get_name_as_str());
     println!("");
@@ -30,11 +33,11 @@ fn main() {
     println!("");
 
     let mut netinfo = Netinfo::new(&[net_interface]).unwrap();
-    netinfo.start_async();
+    netinfo.start_async().unwrap();
 
 
     loop {
-        let statistics = netinfo.get_net_statistics();
+        let statistics = netinfo.get_net_statistics().unwrap();
         let mut printed_pid = false;
         for pid in statistics.get_all_pids() {
             let num_incoming_bytes = statistics.get_bytes_by_attr(Some(pid), Some(InoutType::Incoming), None);
@@ -57,7 +60,7 @@ fn main() {
             println!("{}", SEPARATOR);
             println!("");
         }
-        netinfo.clear();
+        netinfo.clear().unwrap();
         sleep(Duration::new(1, 0));
     }
 }

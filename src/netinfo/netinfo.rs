@@ -105,8 +105,8 @@ pub struct Netinfo {
 
 impl Netinfo {
     /// Lists all non-loopback, active (= up and runnig) network interfaces
-    pub fn list_net_interfaces() -> Vec<NetworkInterface> {
-        CaptureHandle::list_net_interfaces().into_iter().map(|i| NetworkInterface::from(i)).collect()
+    pub fn list_net_interfaces() -> Result<Vec<NetworkInterface>> {
+        Ok(CaptureHandle::list_net_interfaces().into_iter().map(|i| NetworkInterface::from(i)).collect())
     }
 
     /// Constructor for Netinfo. WARNING: this function will only handle the first NetworkInterface -
@@ -155,13 +155,14 @@ impl Netinfo {
     }
 
     /// Returns the statistics about traffic since last clear.
-    pub fn get_net_statistics(&self) -> NetStatistics {
-        self.statistics.lock().unwrap().clone()
+    pub fn get_net_statistics(&self) -> Result<NetStatistics> {
+        Ok(self.statistics.lock().unwrap().clone())
     }
 
     /// Resets the statistics.
-    pub fn clear(&mut self) {
+    pub fn clear(&mut self) -> Result<()> {
         *self.statistics.lock().unwrap() = NetStatistics::default();
+        Ok(())
     }
 
     /// Start capture in current thread. This function will block until an error occurs (may take a LOOOONG time).
@@ -179,12 +180,14 @@ impl Netinfo {
     }
 
     /// Start capture in different thread. This function will not block.
-    pub fn start_async(&mut self) {
+    pub fn start_async(&mut self) -> Result<()> {
         *self.stop_request.lock().unwrap() = StopRequest::Continue;
 
         let capture_handle = self.capture_handle.clone();
         self.thread_handle_opt = Some(thread::spawn(move || {
             capture_handle.lock().unwrap().handle_packets().unwrap();
         }));
+
+        Ok(())
     }
 }
