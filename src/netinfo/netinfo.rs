@@ -1,4 +1,4 @@
-use netinfo::{Pid, PacketInfo, CaptureHandle, PacketMatcher, InoutType, TransportType, NetworkInterface};
+use netinfo::{Pid, PacketInfo, CaptureHandle, PacketMatcher, InoutType, TransportType, NetworkInterface, StopRequest};
 use pnet::datalink::NetworkInterface as PnetNetworkInterface;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -97,6 +97,9 @@ pub struct Netinfo {
     /// This will be updated by the closure which is given to PacketCapture.
     statistics: Arc<Mutex<NetStatistics>>,
 
+    /// will be set by `start*()` and `stop()`
+    stop_request: Arc<Mutex<StopRequest>>,
+
     thread_handle_opt: Option<JoinHandle<()>>,
 }
 
@@ -113,15 +116,18 @@ impl Netinfo {
         // These variables are shared between the Netinfo object and the closure in CaptureHandle.
         let packet_matcher = Arc::new(Mutex::new(PacketMatcher::new()));
         let statistics = Arc::new(Mutex::new(NetStatistics::default()));
+        let stop_request = Arc::new(Mutex::new(StopRequest::Continue));
         let packet_handler_closure = {
             // copy required fields
             let mut statistics = statistics.clone();
             let mut packet_matcher = packet_matcher.clone();
+            let stop_request = stop_request.clone();
 
             // The closure which redirects packet to Self::handle_packet().
             // This closure will be called every time a packet is captured by CaptureHandle.
-            move |packet_info: PacketInfo| -> Result<()> {
-                Self::handle_packet(&mut packet_matcher, &mut statistics, packet_info)
+            move |packet_info: PacketInfo| -> Result<StopRequest> {
+                Self::handle_packet(&mut packet_matcher, &mut statistics, packet_info)?;
+                Ok(*stop_request.lock().unwrap())
             }
         };
 
@@ -132,6 +138,7 @@ impl Netinfo {
             capture_handle:
                 Arc::new(Mutex::new(CaptureHandle::new(&pnet_interfaces[0],
                                                        packet_handler_closure)?)),
+            stop_request: stop_request,
             statistics: statistics,
             thread_handle_opt: None,
         })
@@ -159,11 +166,22 @@ impl Netinfo {
 
     /// Start capture in current thread. This function will block until an error occurs (may take a LOOOONG time).
     pub fn start(&mut self) -> Result<()> {
+        *self.stop_request.lock().unwrap() = StopRequest::Continue;
         self.capture_handle.lock().unwrap().handle_packets()
+    }
+
+    /// Stop capture in whether it was started by `start()` or `start*()` (function may be called from a different thread). Note that `start()` will
+    /// not immediately unblock and the worker thread created by `start_async()` is not immediately ended - instead they will both stop on the next
+    /// packet capture (this is due to a limitation in the packet capture library - as soon as it has non-blocking packet capturing this can be resolved).
+    pub fn stop(&mut self) -> Result<()> {
+        *self.stop_request.lock().unwrap() = StopRequest::Stop;
+        Ok(())
     }
 
     /// Start capture in different thread. This function will not block.
     pub fn start_async(&mut self) {
+        *self.stop_request.lock().unwrap() = StopRequest::Continue;
+
         let capture_handle = self.capture_handle.clone();
         self.thread_handle_opt = Some(thread::spawn(move || {
             capture_handle.lock().unwrap().handle_packets().unwrap();

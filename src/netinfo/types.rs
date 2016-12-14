@@ -207,3 +207,13 @@ pub enum InoutType {
     /// Remote adress -> Local address
     Outgoing,
 }
+
+/// Tell the capturing thread to stop or continue.
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+pub enum StopRequest {
+    /// Request that the thread continues its work.
+    Continue,
+
+    /// Request that the thread stops.
+    Stop,
+}

@@ -20,6 +20,7 @@ pub use self::types::Connection;
 pub use self::types::PacketInfo;
 pub use self::types::MacAddr;
 pub use self::types::NetworkInterface;
+pub use self::types::StopRequest;
 
 /// Represents an Unix-Inode.
 pub type Inode = u64;
