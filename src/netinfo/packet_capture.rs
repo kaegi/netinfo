@@ -215,12 +215,12 @@ impl CaptureHandle {
     /// argument is a closure where all packet infos are dealt with.
     ///
     /// If the closure returns Ok(false), capturing will stop.
-    pub fn new<F: FnMut(PacketInfo) -> Result<StopRequest> + Send + 'static>(interface: &NetworkInterface, packet_info_handler: F) -> Result<CaptureHandle> {
+    pub fn new(interface: &NetworkInterface, packet_info_handler: Box<FnMut(PacketInfo) -> Result<StopRequest> + Send>) -> Result<CaptureHandle> {
         info!("CaptureHandle for interface: {:?}", interface);
 
         Ok(CaptureHandle {
             channel: datalink::channel(interface, Config::default()).chain_err(|| ErrorKind::ChannelCreationError)?,
-            capture_parser: CaptureParser::new(Box::new(packet_info_handler), interface.ips.clone()),
+            capture_parser: CaptureParser::new(packet_info_handler, interface.ips.clone()),
         })
     }
 }

@@ -33,7 +33,7 @@ fn main() {
     println!("");
 
     let mut netinfo = Netinfo::new(&[net_interface]).unwrap();
-    netinfo.start_async().unwrap();
+    netinfo.start().unwrap();
 
 
     loop {
