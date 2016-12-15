@@ -11,6 +11,8 @@ Because it heavily uses the `/proc`-filesystem, only Linux is supported at the m
 
 [Crates.io](https://crates.io/crates/netinfo)
 
+[C Wrapper](https://github.com/ChangSpivey/netinfo-ffi)
+
 How to use the library
 ----------
 
