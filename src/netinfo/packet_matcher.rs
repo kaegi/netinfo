@@ -1,6 +1,7 @@
 use netinfo::{ConnToInodeMap, InodeToPidMap, Inode, Pid, Connection, InoutType, TransportType, PacketInfo};
 use netinfo::error::*;
 use std::collections::HashMap;
+use std::time::{Instant, Duration};
 
 /// Provides the tables for PacketMatcher.
 #[derive(Debug)]
@@ -25,6 +26,12 @@ pub struct PacketMatcher {
     /// If the resulting value is None, the connection could not be associated with
     /// process and it is in most cases pointless to try again.
     known_connections: HashMap<(TransportType, Connection), Option<(Inode, Pid)>>,
+
+
+    /// By default a table refresh is done for every new connection - these can be quite a lot! To
+    /// avoid 100% CPU usage, this value can be used to set a minimimum time interval for refreshes.
+    min_refresh_interval: Option<Duration>,
+    last_refresh: Option<Instant>,
 }
 
 
@@ -59,11 +66,20 @@ impl PacketMatcher {
         PacketMatcher {
             tables: PacketMatcherTables::new(),
             known_connections: HashMap::new(),
+            min_refresh_interval: None,
+            last_refresh: None,
         }
     }
 
     /// This function updates the tables that are used for the matching.
     fn refresh(&mut self) -> Result<()> {
+        if let Some(min_refresh_interval) = self.min_refresh_interval {
+            let now = Instant::now();
+            if let Some(last_refresh) = self.last_refresh {
+                if now - last_refresh < min_refresh_interval { return Ok(()); }
+            }
+            self.last_refresh = Some(now);
+        }
         self.tables.refresh()?;
         self.update_known_connections()?;
         Ok(())
@@ -125,5 +141,13 @@ impl PacketMatcher {
             self.known_connections.insert((tt, c), inode_pid_opt);
             Ok(inode_pid_opt.map(|(_, pid)| pid))
         }
+    }
+
+    /// By default a table refresh is done for every new connection - these can be quite a lot! To
+    /// avoid 100% CPU usage, this value can be used to set a minimimum time interval for refreshes.
+    ///
+    /// With None, you can deactivate time measurements.
+    pub fn set_min_refresh_interval(&mut self, t: Option<Duration>) {
+        self.min_refresh_interval = t;
     }
 }

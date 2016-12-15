@@ -39,6 +39,7 @@ fn main() {
     println!("");
 
     let mut netinfo = Netinfo::new(&net_interfaces[..]).unwrap();
+    netinfo.set_min_refresh_interval(Some(Duration::from_millis(20))).unwrap(); // to avoid 100% CPU usage
     netinfo.start().unwrap();
 
 

@@ -5,6 +5,7 @@ use std::sync::Mutex;
 use std::collections::HashMap;
 use std::thread;
 use std::thread::{JoinHandle};
+use std::time::Duration;
 use netinfo::error::*;
 
 #[derive(Clone, Debug)]
@@ -301,6 +302,18 @@ impl Netinfo {
         Ok(())
     }
 
+    /// This library builds a internal `connection -> pid` table from values exposed by the kernel.
+    /// Refreshing this table is quite expensive on CPU.
+    ///
+    /// By default a table refresh is done for every new connection - these can be quite a lot! To
+    /// avoid 100% CPU usage, this value can be used to set a minimimum time interval between refreshes.
+    /// The disadvantage is of course that a new connection is not recognized until the next refresh.
+    ///
+    /// With `None`, you can deactivate time measurements and restore the original behaviour.
+    pub fn set_min_refresh_interval(&mut self, t: Option<Duration>) -> Result<()> {
+        self.packet_matcher.lock().unwrap().set_min_refresh_interval(t);
+        Ok(())
+    }
 }
 
 /// Automatically stop threads when `Netinfo` object gets dropped/goes out of scope.
