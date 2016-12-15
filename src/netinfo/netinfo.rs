@@ -89,19 +89,23 @@ impl NetStatistics {
     }
 }
 
+// this makes the multi-threaded types more readable
+type Shared<T> = Arc<Mutex<T>>;
+fn new_shared<T>(t: T) -> Shared<T> { Arc::new(Mutex::new(t)) }
+
 /// This structure allows you to group network traffic by pid.
 #[allow(missing_debug_implementations)] // TODO
 pub struct Netinfo {
-    capture_handle: Arc<Mutex<CaptureHandle>>,
+    capture_handle: Shared<CaptureHandle>,
 
     /// This will be updated by the closure which is given to PacketCapture.
-    statistics: Arc<Mutex<NetStatistics>>,
+    statistics: Shared<NetStatistics>,
 
     /// will be set by `start*()` and `stop()`
-    stop_request: Arc<Mutex<StopRequest>>,
+    stop_request: Shared<StopRequest>,
 
     /// will be set by `start_async()` and `stop()`
-    thread_error: Arc<Mutex<Option<Error>>>,
+    thread_error: Shared<Option<Error>>,
 
     thread_handle_opt: Option<JoinHandle<()>>,
 }
@@ -117,9 +121,9 @@ impl Netinfo {
     /// this signature is there for API stability.
     pub fn new(interfaces: &[NetworkInterface]) -> Result<Netinfo> {
         // These variables are shared between the Netinfo object and the closure in CaptureHandle.
-        let packet_matcher = Arc::new(Mutex::new(PacketMatcher::new()));
-        let statistics = Arc::new(Mutex::new(NetStatistics::default()));
-        let stop_request = Arc::new(Mutex::new(StopRequest::Continue));
+        let packet_matcher = new_shared(PacketMatcher::new());
+        let statistics = new_shared(NetStatistics::default());
+        let stop_request = new_shared(StopRequest::Continue);
         let packet_handler_closure = {
             // copy required fields
             let mut statistics = statistics.clone();
@@ -148,8 +152,8 @@ impl Netinfo {
         })
     }
 
-    fn handle_packet(packet_matcher: &mut Arc<Mutex<PacketMatcher>>,
-                     statistics: &mut Arc<Mutex<NetStatistics>>,
+    fn handle_packet(packet_matcher: &mut Shared<PacketMatcher>,
+                     statistics: &mut Shared<NetStatistics>,
                      packet_info: PacketInfo) -> Result<()> {
         let pid_opt = {
             packet_matcher.lock().unwrap().find_pid(packet_info.clone())?
