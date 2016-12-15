@@ -25,14 +25,20 @@ fn main() {
     // Please use error handling instead of unwrap() in real applications - the functions heavily depend on network and thread IO, so they
     // CAN and WILL fail at some point!
 
-    let net_interface = Netinfo::list_net_interfaces().unwrap().pop().unwrap();
+    let net_interfaces = Netinfo::list_net_interfaces().unwrap();
+    if net_interfaces.len() == 0 {
+        println!("No up-and-running network interfaces found!");
+        return;
+    }
 
-    println!("Please use applications that send data over network interface '{}' to see statistics.", net_interface.get_name_as_str());
+    print!("Please use applications that send data over following network interfaces to see statistics: ");
+    print!("{}", net_interfaces[0].get_name_as_str());
+    for i in &net_interfaces[1..] { print!(", {}", i.get_name_as_str()); }
     println!("");
     println!("{}", SEPARATOR);
     println!("");
 
-    let mut netinfo = Netinfo::new(&[net_interface]).unwrap();
+    let mut netinfo = Netinfo::new(&net_interfaces[..]).unwrap();
     netinfo.start().unwrap();
 
 
