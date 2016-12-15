@@ -43,6 +43,13 @@ fn main() {
 
 
     loop {
+        // "handle" erros in worker threads
+        let mut errors = netinfo.pop_thread_errors().unwrap();
+        if errors.len() != 0 {
+            panic!("an error occured in a worker thread: {}", errors.pop().unwrap());
+        }
+
+
         let statistics = netinfo.get_net_statistics().unwrap();
         let mut printed_pid = false;
         for pid in statistics.get_all_pids() {
