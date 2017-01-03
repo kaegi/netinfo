@@ -21,6 +21,6 @@ doc = false
 [dependencies]
 pnet = "0.15.0"
 enum_primitive = "0.1.0"
-byteorder = "0.5"
+byteorder = "1.0"
 error-chain = "0.7"
 log = "0.3.6"
