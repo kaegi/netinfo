@@ -19,7 +19,7 @@ path = "src/main.rs"
 doc = false
 
 [dependencies]
-pnet = "0.14.0"
+pnet = "0.15.0"
 enum_primitive = "0.1.0"
 byteorder = "0.5"
 error-chain = "0.7"
