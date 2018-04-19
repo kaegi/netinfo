@@ -18,7 +18,6 @@
         unused_qualifications)]
 
 #[macro_use] extern crate log;
-#[macro_use] extern crate enum_primitive;
 #[macro_use] extern crate error_chain;
 extern crate pnet;
 extern crate byteorder;

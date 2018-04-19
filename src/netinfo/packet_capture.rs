@@ -81,22 +81,18 @@ impl std::fmt::Debug for CaptureParser {
 }
 
 impl CaptureParser {
-    fn new(packet_info_handler: Box<FnMut(PacketInfo) -> Result<StopRequest> + Send>, local_net_ips_opt: Option<Vec<IpAddr>>) -> CaptureParser {
-        let mut local_net_ips_hashset = HashSet::new();
-        if let Some(local_net_ips) = local_net_ips_opt {
-            for ip in local_net_ips { local_net_ips_hashset.insert(ip); }
-        }
+    fn new(packet_info_handler: Box<FnMut(PacketInfo) -> Result<StopRequest> + Send>, local_net_ips_opt: Vec<IpAddr>) -> CaptureParser {
+        let mut local_net_ips_hashset: HashSet<IpAddr> = local_net_ips_opt.into_iter().collect();
         CaptureParser { packet_info_handler: packet_info_handler, local_net_ips: local_net_ips_hashset }
     }
 
     fn handle_channel(&mut self, channel: &mut Channel) -> Result<bool> {
 		match channel {
 			&mut Channel::Ethernet(_ /* ref tx */, ref mut rx) => {
-                let mut iter = rx.iter();
                 loop {
-                    let packet = iter.next().chain_err(|| ErrorKind::EthernetReceiveError)?;
-                    let extra_data = ExtraPacketData { length: packet.packet().len() as u64 };
-                    self.handle_ethernet_packet(extra_data, packet)?;
+                    let packet = rx.next().chain_err(|| ErrorKind::EthernetReceiveError)?;
+                    let extra_data = ExtraPacketData { length: packet.len() as u64 };
+                    self.handle_ethernet_packet(extra_data, EthernetPacket::new(packet).ok_or(ErrorKind::EthernetReceiveError)?)?;
 				}
 			}
 			_ => {
@@ -220,7 +216,7 @@ impl CaptureHandle {
 
         Ok(CaptureHandle {
             channel: datalink::channel(interface, Config::default()).chain_err(|| ErrorKind::ChannelCreationError)?,
-            capture_parser: CaptureParser::new(packet_info_handler, interface.ips.clone()),
+            capture_parser: CaptureParser::new(packet_info_handler, interface.ips.iter().map(|ip| ip.ip()).collect()),
         })
     }
 }

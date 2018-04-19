@@ -82,10 +82,7 @@ impl NetworkInterface {
     pub fn get_mac(&self) -> Option<MacAddr> { self.inner.mac.map(|m| m.into()) }
 
     /// An IP addresses for the interface
-    pub fn get_ips(&self) -> Option<Vec<IpAddr>> { self.inner.ips.clone() }
-
-    /// An IP addresses for the interface
-    pub fn get_ips_as_slice(&self) -> Option<&[IpAddr]> { self.inner.ips.as_ref().map(|ips| &ips[..]) }
+    pub fn get_ips(&self) -> Vec<IpAddr> { self.inner.ips.iter().map(|x| x.ip()).collect() }
 
     /// Operating system specific flags for the interface
     pub fn get_flags(&self) -> u32 { self.inner.flags }
