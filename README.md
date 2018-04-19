@@ -20,7 +20,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-netinfo = 0.3
+netinfo = 0.4.0
 ```
 
 How to compile the binary

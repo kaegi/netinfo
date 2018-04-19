@@ -1,6 +1,6 @@
 [package]
 name = "netinfo"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Chang Spivey <chang.spivey@gmail.com>"]
 description = "Groups network usage by process"
 repository = "https://github.com/ChangSpivey/netinfo"
