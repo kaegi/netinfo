@@ -22,5 +22,5 @@ doc = false
 pnet = "0.21.0"
 enum_primitive = "0.1.0"
 byteorder = "1.0"
-error-chain = "0.7"
-log = "0.3.6"
+error-chain = "0.12"
+log = "0.4.5"
