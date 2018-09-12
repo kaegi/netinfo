@@ -1,9 +1,9 @@
 [package]
 name = "netinfo"
 version = "0.4.0"
-authors = ["Chang Spivey <chang.spivey@gmail.com>"]
+authors = ["kaegi <kaegi.dev@gmail.com>"]
 description = "Groups network usage by process"
-repository = "https://github.com/ChangSpivey/netinfo"
+repository = "https://github.com/kaegi/netinfo"
 documentation = "https://docs.rs/netinfo"
 readme = "README.md"
 keywords = ["network", "profile", "usage", "nethogs", "pid"]
@@ -20,7 +20,6 @@ doc = false
 
 [dependencies]
 pnet = "0.21.0"
-enum_primitive = "0.1.0"
 byteorder = "1.0"
 error-chain = "0.12"
 log = "0.4.5"
