@@ -82,7 +82,7 @@ impl std::fmt::Debug for CaptureParser {
 
 impl CaptureParser {
     fn new(packet_info_handler: Box<FnMut(PacketInfo) -> Result<StopRequest> + Send>, local_net_ips_opt: Vec<IpAddr>) -> CaptureParser {
-        let mut local_net_ips_hashset: HashSet<IpAddr> = local_net_ips_opt.into_iter().collect();
+        let local_net_ips_hashset: HashSet<IpAddr> = local_net_ips_opt.into_iter().collect();
         CaptureParser { packet_info_handler: packet_info_handler, local_net_ips: local_net_ips_hashset }
     }
 

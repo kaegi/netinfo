@@ -8,7 +8,6 @@
 //! This binary will group network usage per process nethogs-like. See library documentation or 'lib.rs' for more information.
 
 #[macro_use] extern crate log;
-#[macro_use] extern crate enum_primitive;
 #[macro_use] extern crate error_chain;
 extern crate pnet;
 extern crate byteorder;
