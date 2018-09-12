@@ -7,7 +7,7 @@ repository = "https://github.com/ChangSpivey/netinfo"
 documentation = "https://docs.rs/netinfo"
 readme = "README.md"
 keywords = ["network", "profile", "usage", "nethogs", "pid"]
-license = "AGPL-3.0"
+license = "MIT"
 
 [lib]
 name = "netinfo"
