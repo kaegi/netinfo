@@ -72,18 +72,17 @@ impl PacketMatcher {
     }
 
     /// This function updates the tables that are used for the matching.
-    /// Returns false if refresh was skipped due to `min_refresh_interval`
-    fn refresh(&mut self) -> Result<bool> {
+    fn refresh(&mut self) -> Result<()> {
         if let Some(min_refresh_interval) = self.min_refresh_interval {
             let now = Instant::now();
             if let Some(last_refresh) = self.last_refresh {
-                if now - last_refresh < min_refresh_interval { return Ok((false)); }
+                if now - last_refresh < min_refresh_interval { return Ok(()); }
             }
             self.last_refresh = Some(now);
         }
         self.tables.refresh()?;
         self.update_known_connections()?;
-        Ok((true))
+        Ok(())
     }
 
     /// A process might end a connection and another might open the same connection.
@@ -134,15 +133,16 @@ impl PacketMatcher {
     fn find_pid_cached(&mut self, tt: TransportType, c: Connection) -> Result<Option<Pid>> {
         if let Some(&res) = self.known_connections.get(&(tt, c)) {
             // Known connection! Does this connection have a process?
+            if res.is_none() { // If not, we try to find one
+                self.refresh()?;
+            }
             Ok(res.map(|(_, pid)| pid))
-        } else if self.refresh()? {
-             // Unknown connection! But refresh was succesful
+        } else {
+            // New connection!
+            self.refresh()?;
             let inode_pid_opt = self.tables.map_connection(tt, c);
             self.known_connections.insert((tt, c), inode_pid_opt);
             Ok(inode_pid_opt.map(|(_, pid)| pid))
-        } else { // Unknown connection and refresh was skipped
-            // we simply return None and will retry to find the PID after a succesful refresh
-            Ok(None)
         }
     }
 
