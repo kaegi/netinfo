@@ -133,9 +133,12 @@ impl PacketMatcher {
     fn find_pid_cached(&mut self, tt: TransportType, c: Connection) -> Result<Option<Pid>> {
         if let Some(&res) = self.known_connections.get(&(tt, c)) {
             // Known connection! Does this connection have a process?
+            if res.is_none() { // If not, we try to find one
+                self.refresh()?;
+            }
             Ok(res.map(|(_, pid)| pid))
         } else {
-            // Unknown connection!
+            // New connection!
             self.refresh()?;
             let inode_pid_opt = self.tables.map_connection(tt, c);
             self.known_connections.insert((tt, c), inode_pid_opt);
